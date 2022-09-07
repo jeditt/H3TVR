@@ -7,20 +7,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
+
 namespace H3TVR
 {
 	[BepInPlugin(PluginInfo.GUID, PluginInfo.NAME, PluginInfo.VERSION)]
 	[BepInProcess("h3vr.exe")]
-	public class H3TVR : BaseUnityPlugin
+    public class H3TVR : BaseUnityPlugin
 	{
         private const float SlowdownFactor = .001f;
         private const float SlowdownLength = 6f;
         public string SlomoStatus = "Off";
         private const float MaxSlomo = .1f;
         private const float SlomoWaitTime = 2f;
-        private string Magazine = "None";
         private readonly Hooks _hooks;
         private List<string> GunList = File.ReadAllLines(@"c:\H3TVR\GunList.txt").ToList();
+        private List<string> MagazineList = File.ReadAllLines(@"c:\H3TVR\MagazineList.txt").ToList();
 
         public H3TVR()
 		{
@@ -30,11 +31,8 @@ namespace H3TVR
         }
 
 		private void Awake()
-		{
-            {
-                Logger.LogInfo("Successfully loaded H3TVR!");
-            }
-
+		{      
+            Logger.LogInfo("Successfully loaded H3TVR!");  
         }
 
 		private void Update()
@@ -352,28 +350,61 @@ namespace H3TVR
             {
                 Destroy(GM.CurrentMovementManager.Hands[1].CurrentInteractable.gameObject);
             }
+
+            //Set max angle
+            float maxAngle = 4.0f;
+
+            Transform PointingTransfrom = transform;
+
+
+
+            //Get Random direction for bullet
+            Vector2 randRot = Random.insideUnitCircle;
+
+            // Get the object I want to spawnz
+            FVRObject obj = IM.OD["12GaugeShellFreedomfetti"];
+
+            //Set Object Position
+            Vector3 shellPosition0 = GM.CurrentPlayerBody.RightHand.position + (GM.CurrentPlayerBody.RightHand.forward * 0.02f);
+
+            GameObject go0 = Instantiate(obj.GetGameObject(), shellPosition0, Quaternion.LookRotation(GM.CurrentPlayerBody.RightHand.forward));
+
+
+            //Set Object Direction
+            go0.transform.Rotate(new Vector3(randRot.x * maxAngle, randRot.y * maxAngle, 0.0f), Space.Self);
+
+            //Detonate Shell?
+            FVRFireArmRound cartridge = go0.GetComponent<FVRFireArmRound>();
+            cartridge.Splode(0.01f, false, true);
+
         }
 
         private void SpawnSkittySubGun()
         {
             GunList.Shuffle();
+            MagazineList.Shuffle();
             string TopGun = GunList.ElementAt(0);
+            string TopGunTruncated = new string(TopGun.Take(5).ToArray());
+            Logger.LogInfo(TopGunTruncated);
+            Logger.LogInfo(TopGun);
+            string MatchingMagazine = MagazineList.Find(o => o.Contains(TopGunTruncated));
+            Logger.LogInfo(MatchingMagazine);
 
             // Get the object you want to spawn
             FVRObject obj = IM.OD[TopGun];
-            //FVRObject obj2 = IM.OD[Magazine];
+            FVRObject obj2 = IM.OD[MatchingMagazine];
 
             // Instantiate (spawn) the object above the player's head
             GameObject go = Instantiate(obj.GetGameObject(), new Vector3(0f, .25f, 0f) + GM.CurrentPlayerBody.Head.position, GM.CurrentPlayerBody.Head.rotation);
-            //GameObject go2 = Instantiate(obj2.GetGameObject(), new Vector3(0f, .25f, 0f) + GM.CurrentPlayerBody.Head.position, GM.CurrentPlayerBody.Head.rotation);
+            GameObject go2 = Instantiate(obj2.GetGameObject(), new Vector3(0f, .25f, 0f) + GM.CurrentPlayerBody.Head.position, GM.CurrentPlayerBody.Head.rotation);
 
             //add some speeeeen
             go.GetComponent<Rigidbody>().AddTorque(new Vector3(.25f, .25f, .25f));
-            //go2.GetComponent<Rigidbody>().AddTorque(new Vector3(.25f, .25f, .25f));
+            go2.GetComponent<Rigidbody>().AddTorque(new Vector3(.25f, .25f, .25f));
 
             //add force
             go.GetComponent<Rigidbody>().AddForce(GM.CurrentPlayerBody.Head.forward * 100);
-            //go2.GetComponent<Rigidbody>().AddForce(GM.CurrentPlayerBody.Head.forward * 100);
+            go2.GetComponent<Rigidbody>().AddForce(GM.CurrentPlayerBody.Head.forward * 100);
 
         }
 
