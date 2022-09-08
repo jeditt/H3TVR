@@ -347,7 +347,7 @@ namespace H3TVR
 
         IEnumerator ZeroGWait()
         {
-            yield return new WaitForSecondsRealtime(ZeroGWaitTime);
+            yield return new WaitForSeconds(ZeroGWaitTime);
             ZeroGStatus = "Falling";
             RealisticFall();
         }
@@ -474,7 +474,8 @@ namespace H3TVR
 
         private void EnableMeatHands()
         {
-            GM.Options.ControlOptions.MFMode = ControlOptions.MeatFingerMode.Enabled;
+            GM.CurrentMovementManager.Hands[0].SpawnSausageFingers();
+            GM.CurrentMovementManager.Hands[1].SpawnSausageFingers();
         }
 
         private void OnDestroy()
