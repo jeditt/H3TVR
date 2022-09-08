@@ -19,6 +19,9 @@ namespace H3TVR
         public string SlomoStatus = "Off";
         private const float MaxSlomo = .1f;
         private const float SlomoWaitTime = 2f;
+        private const float ZeroGWaitTime = 3f;
+        private const float RealisticFallTime = 1f;
+        private string ZeroGStatus = "Off";
         private readonly Hooks _hooks;
         private List<string> GunList = File.ReadAllLines(@"c:\H3TVR\GunList.txt").ToList();
         private List<string> MagazineList = File.ReadAllLines(@"c:\H3TVR\MagazineList.txt").ToList();
@@ -120,6 +123,27 @@ namespace H3TVR
             {
                 SpawnSkittySubGun();
             }
+
+            if (Input.GetKeyDown(KeyCode.Y))
+            {
+                ZeroGravityBumpDown();
+            }
+
+            if (ZeroGStatus == "On")
+            {
+                StartCoroutine(ZeroGWait());
+            }
+
+            if (ZeroGStatus == "Falling")
+            {
+                StartCoroutine(RealisticFallWait());
+            }
+
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                EnableMeatHands();
+            }
+
 
 
         }
@@ -321,6 +345,19 @@ namespace H3TVR
             SlomoStatus = "Return";
         }
 
+        IEnumerator ZeroGWait()
+        {
+            yield return new WaitForSecondsRealtime(ZeroGWaitTime);
+            ZeroGStatus = "Falling";
+            RealisticFall();
+        }
+
+        IEnumerator RealisticFallWait()
+        {
+            yield return new WaitForSecondsRealtime(RealisticFallTime);
+            ZeroGravityBumpUp();
+        }
+
         //private void SpawnNade()
         //{
 
@@ -406,6 +443,38 @@ namespace H3TVR
             go.GetComponent<Rigidbody>().AddForce(GM.CurrentPlayerBody.Head.forward * 100);
             go2.GetComponent<Rigidbody>().AddForce(GM.CurrentPlayerBody.Head.forward * 100);
 
+        }
+
+        private void ZeroGravityBumpDown()
+        {
+            GM.Options.SimulationOptions.PlayerGravityMode = SimulationOptions.GravityMode.None;
+            GM.Options.SimulationOptions.ObjectGravityMode = SimulationOptions.GravityMode.None;
+            GM.CurrentSceneSettings.RefreshGravity();           
+            StartCoroutine(ZeroGWait());
+            //Logger.LogInfo("Gravity Is Now " + GM.Options.SimulationOptions.PlayerGravityMode);
+
+        }
+
+        private void ZeroGravityBumpUp()
+        {
+            GM.Options.SimulationOptions.PlayerGravityMode = SimulationOptions.GravityMode.Playful;
+            GM.Options.SimulationOptions.ObjectGravityMode = SimulationOptions.GravityMode.Playful;
+            GM.CurrentSceneSettings.RefreshGravity();
+            ZeroGStatus = "Off";
+            //Logger.LogInfo("Gravity Is Now " + GM.Options.SimulationOptions.PlayerGravityMode);
+        }
+
+        private void RealisticFall()
+        {
+            GM.Options.SimulationOptions.PlayerGravityMode = SimulationOptions.GravityMode.Realistic;
+            GM.Options.SimulationOptions.ObjectGravityMode = SimulationOptions.GravityMode.Realistic;
+            GM.CurrentSceneSettings.RefreshGravity();
+            //Logger.LogInfo("Gravity Is Now " + GM.Options.SimulationOptions.PlayerGravityMode);
+        }
+
+        private void EnableMeatHands()
+        {
+            GM.Options.ControlOptions.MFMode = ControlOptions.MeatFingerMode.Enabled;
         }
 
         private void OnDestroy()

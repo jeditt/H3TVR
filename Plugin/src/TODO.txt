@@ -1,0 +1,8 @@
+﻿Change Gravity for short amount of time
+	CURRENT ISSUE HERE - Need to stopBumpUp from repeating, think I have to move it out of the coroutine and work with setting a variable instead
+
+Meat Hands!
+	Need to see what the options panel does instead of just setting the option to true, as that doesn't seem to accomplish anything on its own
+
+SkittySpawner
+	Sneak glock in there (if I haven't already)
